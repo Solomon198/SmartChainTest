@@ -1,27 +1,27 @@
-require('@abtnode/mongoose-nedb').install();
+import { MongoMemoryServer } from "mongodb-memory-server";
+import mongoose from "mongoose";
+const os = require("os");
+const fs = require("fs");
+const path = require("path");
 
-const os = require('os');
-const fs = require('fs');
-const path = require('path');
-const mongoose = require('mongoose');
-
-mongoose.set('debug', true);
+mongoose.set("debug", true);
 mongoose.Promise = Promise;
 
-const dbPath = path.join(os.tmpdir(), 'nedb');
+const dbPath = path.join(os.tmpdir(), "nedb");
 fs.mkdirSync(dbPath, { recursive: true });
 
-export const ensureConnection = () => {
+export const ensureConnection = async () => {
+  const mongoServer = await MongoMemoryServer.create();
   return new Promise((resolve, reject) => {
     // This is needed
-    mongoose.connect('mongodb://localhost/test', { dbPath });
+    mongoose.connect(mongoServer.getUri(), { dbName: "smartchain" });
     const db = mongoose.connection;
-    db.on('error', (err:any) => {
-      console.error.bind(console, 'connection error:');
+    db.on("error", (err: any) => {
+      console.error.bind(console, "connection error:");
       reject(err);
     });
-    db.once('open', async () => {
-      console.log('connected', dbPath);
+    db.once("open", async () => {
+      console.log("connected", dbPath);
       resolve(db);
     });
   });
